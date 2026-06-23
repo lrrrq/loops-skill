@@ -1,0 +1,18 @@
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    commit-message:
+      prefix: "deps"
+    labels:
+      - "dependencies"
+    open-pull-requests-limit: 5
+    # loops-skill declares no runtime deps by design (stdlib-only).
+    # Dependabot will pick up the optional dev/test extras if any are
+    # added to pyproject.toml in the future.
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
