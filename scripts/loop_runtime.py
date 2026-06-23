@@ -106,7 +106,10 @@ class JsonFileStorage:
 
     def append_step(self, loop_id: str, step: dict) -> None:
         path = self._history_path(loop_id)
-        with path.open("a", encoding="utf-8") as f:
+        # `newline=""` disables universal newlines mode so a literal "\n"
+        # stays "\n" on every OS. Without this, Windows would translate
+        # every "\n" we write into "\r\n" and break the JSON Lines format.
+        with path.open("a", encoding="utf-8", newline="") as f:
             f.write(json.dumps(step, ensure_ascii=False) + "\n")
             f.flush()
             os.fsync(f.fileno())
