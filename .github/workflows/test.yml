@@ -1,0 +1,52 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  cross-platform:
+    name: smoke (${{ matrix.os }}, py${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          # On Windows we want `python` on PATH; on macOS/Linux both
+          # `python` and `python3` get created. No cache needed —
+          # this repo has no third-party dependencies.
+
+      - name: Run smoke tests
+        shell: bash
+        run: |
+          python tests/test_cross_platform.py -v
+
+      - name: Run smoke tests (windows, cmd)
+        if: matrix.os == 'windows-latest'
+        shell: cmd
+        # Same script invoked through `python` from cmd.exe to make sure
+        # the Windows launcher path works (no `python3` symlink).
+        run: |
+          python tests\test_cross_platform.py -v
+
+      - name: Verify e2e example imports cleanly
+        shell: bash
+        run: |
+          python -c "
+          import sys, os
+          sys.path.insert(0, 'scripts')
+          from loop_runtime import LoopRunner, JsonFileStorage, MockAgentRuntime
+          print('imports OK')
+          "
